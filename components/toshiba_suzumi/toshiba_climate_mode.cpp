@@ -172,7 +172,7 @@ const climate::ClimateSwingMode IntToClimateSwingMode(SWING mode) {
     case SWING::BOTH:
       return climate::CLIMATE_SWING_BOTH;
     default:
-      ESP_LOGE(TAG, "Invalid swing mode %d.", mode);
+      ESP_LOGE(TAG, "Invalid swing mode %d.", static_cast<int>(mode));
       return climate::CLIMATE_SWING_OFF;
   }
 }
