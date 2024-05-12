@@ -324,7 +324,7 @@ void ToshibaClimateUart::update() {
 void ToshibaClimateUart::control(const climate::ClimateCall &call) {
   if (call.get_mode().has_value()) {
     ClimateMode mode = *call.get_mode();
-    ESP_LOGD(TAG, "Setting mode to %s", climate_mode_to_string(mode).c_str());
+    ESP_LOGD(TAG, "Setting mode to %s", LOG_STR_ARG(climate_mode_to_string(mode)));
     if (this->mode == CLIMATE_MODE_OFF && mode != CLIMATE_MODE_OFF) {
       ESP_LOGD(TAG, "Setting AC unit power state to ON.");
       this->sendCmd(ToshibaCommandType::POWER_STATE, static_cast<uint8_t>(STATE::ON));
@@ -350,11 +350,11 @@ void ToshibaClimateUart::control(const climate::ClimateCall &call) {
   if (call.get_fan_mode().has_value()) {
     auto fan_mode = *call.get_fan_mode();
     if (fan_mode == CLIMATE_FAN_AUTO) {
-      ESP_LOGD(TAG, "Setting fan mode to %s", climate_fan_mode_to_string(fan_mode).c_str());
+      ESP_LOGD(TAG, "Setting fan mode to %s", LOG_STR_ARG(climate_fan_mode_to_string(fan_mode)));
       this->set_fan_mode_(fan_mode);
       this->sendCmd(ToshibaCommandType::FAN, static_cast<uint8_t>(FAN::AUTO));
     } else if (fan_mode == CLIMATE_FAN_QUIET) {
-      ESP_LOGD(TAG, "Setting fan mode to %s", climate_fan_mode_to_string(fan_mode).c_str());
+      ESP_LOGD(TAG, "Setting fan mode to %s", LOG_STR_ARG(climate_fan_mode_to_string(fan_mode)));
       this->set_fan_mode_(fan_mode);
       this->sendCmd(ToshibaCommandType::FAN, static_cast<uint8_t>(FAN::QUIET));
     }
