@@ -373,7 +373,7 @@ void ToshibaClimateUart::control(const climate::ClimateCall &call) {
   if (call.get_swing_mode().has_value()) {
     auto swing_mode = *call.get_swing_mode();
     auto function_value = ClimateSwingModeToInt(swing_mode);
-    ESP_LOGD(TAG, "Setting swing mode to %s", LOG_STR_ARG(climate_swing_mode_to_string(swing_mode));
+    ESP_LOGD(TAG, "Setting swing mode to %s", LOG_STR_ARG(climate_swing_mode_to_string(swing_mode)));
     this->swing_mode = swing_mode;
     this->sendCmd(ToshibaCommandType::SWING, static_cast<uint8_t>(function_value));
   }
