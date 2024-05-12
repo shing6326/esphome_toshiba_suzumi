@@ -36,15 +36,15 @@ void ToshibaClimateUart::send_to_uart(ToshibaCommand command) {
  */
 void ToshibaClimateUart::start_handshake() {
   ESP_LOGCONFIG(TAG, "Sending handshake...");
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[0]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[1]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[2]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[3]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[4]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[5]});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[0], .delay = 0});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[1], .delay = 0});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[2], .delay = 0});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[3], .delay = 0});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[4], .delay = 0});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[5], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .delay = 2000000}); // 2000 ms
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[0]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[1]});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[0], .delay = 0});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[1], .delay = 0});
 }
 
 /**
@@ -115,7 +115,7 @@ void ToshibaClimateUart::sendCmd(ToshibaCommandType cmd, uint8_t value) {
   payload.push_back(value);
   payload.push_back(checksum(payload, payload.size()));
   ESP_LOGD(TAG, "Sending ToshibaCommand: %d, value: %d, checksum: %d", static_cast<int>(cmd), value, payload[14]);
-  this->enqueue_command_(ToshibaCommand{.cmd = cmd, .payload = std::vector<uint8_t>{payload}});
+  this->enqueue_command_(ToshibaCommand{.cmd = cmd, .payload = std::vector<uint8_t>{payload}, .delay = 0});
 }
 
 void ToshibaClimateUart::requestData(ToshibaCommandType cmd) {
@@ -123,7 +123,7 @@ void ToshibaClimateUart::requestData(ToshibaCommandType cmd) {
   payload.push_back(static_cast<uint8_t>(cmd));
   payload.push_back(checksum(payload, payload.size()));
   ESP_LOGI(TAG, "Requesting data from sensor %d, checksum: %d", payload[12], payload[13]);
-  this->enqueue_command_(ToshibaCommand{.cmd = cmd, .payload = std::vector<uint8_t>{payload}});
+  this->enqueue_command_(ToshibaCommand{.cmd = cmd, .payload = std::vector<uint8_t>{payload}, .delay = 0});
 }
 
 void ToshibaClimateUart::getInitData() {
