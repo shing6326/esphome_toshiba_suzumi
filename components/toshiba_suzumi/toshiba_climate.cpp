@@ -7,8 +7,8 @@ namespace toshiba_suzumi {
 
 using namespace esphome::climate;
 
-static const int RECEIVE_TIMEOUT = 200;
-static const int COMMAND_DELAY = 100;
+static const int RECEIVE_TIMEOUT = 200000; // in microseconds
+static const int COMMAND_DELAY = 100000; // in microseconds
 
 /**
  * Checksum is calculated from all bytes excluding start byte.
@@ -26,7 +26,7 @@ uint8_t checksum(std::vector<uint8_t> data, uint8_t length) {
  * Send the command to UART interface.
  */
 void ToshibaClimateUart::send_to_uart(ToshibaCommand command) {
-  this->last_command_timestamp_ = millis();
+  this->last_command_timestamp_ = esp_timer_get_time();
   ESP_LOGV(TAG, "Sending: [%s]", format_hex_pretty(command.payload).c_str());
   this->write_array(command.payload);
 }
@@ -42,7 +42,7 @@ void ToshibaClimateUart::start_handshake() {
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[3]});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[4]});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[5]});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .delay = 2000});
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .delay = 2000000}); // 2000 ms
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[0]});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[1]});
 }
@@ -50,7 +50,7 @@ void ToshibaClimateUart::start_handshake() {
 /**
  * Handle data in RX buffer, validate message for content and checksum.
  * Since we know the format only of some messages (expected length), unknown messages
- * are ended via RECIEVE timeout.
+ * are ended via RECEIVE timeout.
  */
 bool ToshibaClimateUart::validate_message_() {
   uint8_t at = this->rx_message_.size() - 1;
@@ -68,8 +68,8 @@ bool ToshibaClimateUart::validate_message_() {
 
   // Byte 3
   if (data[2] != 0x03) {
-    // Normal commands starts with 0x02 0x00 0x03 and have length between 15-17 bytes.
-    // however there are some special unknown handshake commands which has non-standard replies.
+    // Normal commands start with 0x02 0x00 0x03 and have length between 15-17 bytes.
+    // however there are some special unknown handshake commands which have non-standard replies.
     // Since we don't know their format, we can't validate them.
     return true;
   }
@@ -150,13 +150,13 @@ void ToshibaClimateUart::setup() {
  * Detect RX timeout and send next command in the queue to the unit.
  */
 void ToshibaClimateUart::process_command_queue_() {
-  uint32_t now = millis();
-  uint32_t cmdDelay = now - this->last_command_timestamp_;
+  uint64_t now = esp_timer_get_time();
+  uint64_t cmdDelay = now - this->last_command_timestamp_;
 
-  // when we have not processed message and timeout since last received byte has expired,
-  // we likely won't receive any more data and there is nothing we can do with the message as it's
-  // format is was not recognized by validate_message_ function.
-  // Nothing to do - drop the message to free up communication and allow to send next command.
+  // when we have not processed message and timeout since the last received byte has expired,
+  // we likely won't receive any more data and there is nothing we can do with the message as its
+  // format was not recognized by the validate_message_ function.
+  // Nothing to do - drop the message to free up communication and allow sending the next command.
   if (now - this->last_rx_char_timestamp_ > RECEIVE_TIMEOUT) {
     this->rx_message_.clear();
   }
@@ -165,7 +165,7 @@ void ToshibaClimateUart::process_command_queue_() {
   if (cmdDelay > COMMAND_DELAY && !this->command_queue_.empty() && this->rx_message_.empty()) {
     auto newCommand = this->command_queue_.front();
     if (newCommand.cmd == ToshibaCommandType::DELAY && cmdDelay < newCommand.delay) {
-      // delay command did not finished yet
+      // delay command did not finish yet
       return;
     }
     this->send_to_uart(this->command_queue_.front());
@@ -181,7 +181,7 @@ void ToshibaClimateUart::handle_rx_byte_(uint8_t c) {
   if (!validate_message_()) {
     this->rx_message_.clear();
   } else {
-    this->last_rx_char_timestamp_ = millis();
+    this->last_rx_char_timestamp_ = esp_timer_get_time();
   }
 }
 
@@ -273,7 +273,7 @@ void ToshibaClimateUart::parseResponse(std::vector<uint8_t> rawData) {
         // AC unit was just powered off, set mode to OFF
         this->mode = climate::CLIMATE_MODE_OFF;
       } else if (this->mode == climate::CLIMATE_MODE_OFF && climateState == STATE::ON) {
-        // AC unit was just powered on, query unit for it's MODE
+        // AC unit was just powered on, query unit for its MODE
         this->requestData(ToshibaCommandType::MODE);
       }
       this->power_state_ = climateState;
@@ -306,12 +306,12 @@ void ToshibaClimateUart::dump_config() {
   }
   if (special_mode_select_ != nullptr) {
     LOG_SELECT("", "Special mode selector", this->special_mode_select_);
-  } 
+  }
 }
 
 /**
  * Periodically request room and outdoor temperature.
- * It servers two purposes - updates data and is like "watchdog" because
+ * It serves two purposes - updates data and is like a "watchdog" because
  * some people reported that without communication, the unit might stop responding.
  */
 void ToshibaClimateUart::update() {
