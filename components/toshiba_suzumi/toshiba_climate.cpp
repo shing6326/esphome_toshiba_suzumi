@@ -42,7 +42,7 @@ void ToshibaClimateUart::start_handshake() {
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[3], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[4], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[5], .delay = 0});
-  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .payload = {}, .delay = 2000000}); // 2000 ms
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .delay = 2000000}); // 2000 ms
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[0], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[1], .delay = 0});
 }
