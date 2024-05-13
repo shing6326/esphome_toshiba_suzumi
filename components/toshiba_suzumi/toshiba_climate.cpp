@@ -27,6 +27,10 @@ uint8_t checksum(std::vector<uint8_t> data, uint8_t length) {
  */
 void ToshibaClimateUart::send_to_uart(ToshibaCommand command) {
   this->last_command_timestamp_ = esp_timer_get_time();
+  if (command.payload.empty()) {
+    ESP_LOGV(TAG, "Skipping sending empty payload for command type %d", static_cast<int>(command.cmd));
+    return; // Skip sending commands with empty payload
+  }
   ESP_LOGV(TAG, "Sending: [%s]", format_hex_pretty(command.payload).c_str());
   this->write_array(command.payload);
 }
@@ -42,7 +46,7 @@ void ToshibaClimateUart::start_handshake() {
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[3], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[4], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = HANDSHAKE[5], .delay = 0});
-//  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .payload = {}, .delay = 2000000}); // 2000 ms
+  enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::DELAY, .payload = {}, .delay = 2000000}); // 2000 ms
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[0], .delay = 0});
   enqueue_command_(ToshibaCommand{.cmd = ToshibaCommandType::HANDSHAKE, .payload = AFTER_HANDSHAKE[1], .delay = 0});
 }
