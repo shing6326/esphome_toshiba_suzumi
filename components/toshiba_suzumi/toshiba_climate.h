@@ -6,6 +6,7 @@
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/select/select.h"
 #include "toshiba_climate_mode.h"
+#include "esp_timer.h"
 
 namespace esphome {
 namespace toshiba_suzumi {
